@@ -143,7 +143,11 @@ function ProductModal({ initial, onClose, onSave, saving }) {
           description: initial.description ?? "",
           brand: initial.brand ?? "",
           productCategory: initial.productCategory?.toLowerCase() ?? "",
-          mrp: p0?.mrp ?? p0?.price ?? "",
+          productTechnicalDetails: initial.productTechnicalDetails ?? "",
+          howToUse: initial.howToUse ?? "",
+          productBenefits: initial.productBenefits ?? "",
+          targetCrops: initial.targetCrops?.join(", ") ?? "All",
+          mrp: p0?.mrp ?? "",
           quantity: p0?.quantity ?? "",
           unit: p0?.unit ?? "",
           parameter: p0?.parameter ?? "",
@@ -155,6 +159,10 @@ function ProductModal({ initial, onClose, onSave, saving }) {
           description: "",
           brand: "",
           productCategory: "",
+          productTechnicalDetails: "",
+          howToUse: "",
+          productBenefits: "",
+          targetCrops: "All",
           mrp: "",
           quantity: "",
           unit: "",
@@ -185,6 +193,9 @@ function ProductModal({ initial, onClose, onSave, saving }) {
     const missing = [];
     if (!form.productName.trim()) missing.push("Product Name");
     if (!isEdit && !form.productCategory) missing.push("Category");
+    if (!form.productTechnicalDetails.trim()) missing.push("Technical Details");
+    if (!form.howToUse.trim()) missing.push("How To Use");
+    if (!form.productBenefits.trim()) missing.push("Product Benefits");
     if (form.mrp === "" || form.mrp === null) missing.push("MRP");
     if (form.quantity === "" || form.quantity === null)
       missing.push("Quantity");
@@ -274,6 +285,45 @@ function ProductModal({ initial, onClose, onSave, saving }) {
                       className={inputCls + " resize-none"}
                       rows={2}
                       placeholder="Optional product description"
+                    />
+                  </FIELD>
+                </div>
+                <div className="col-span-2">
+                  <FIELD label="Technical Details" required>
+                    <textarea
+                      value={form.productTechnicalDetails}
+                      onChange={(e) => setF("productTechnicalDetails", e.target.value)}
+                      className={inputCls + " resize-none"}
+                      rows={2}
+                      placeholder="e.g. NPK composition, grade"
+                    />
+                  </FIELD>
+                </div>
+                <FIELD label="How To Use" required>
+                  <textarea
+                    value={form.howToUse}
+                    onChange={(e) => setF("howToUse", e.target.value)}
+                    className={inputCls + " resize-none"}
+                    rows={2}
+                    placeholder="Usage instructions"
+                  />
+                </FIELD>
+                <FIELD label="Product Benefits" required>
+                  <textarea
+                    value={form.productBenefits}
+                    onChange={(e) => setF("productBenefits", e.target.value)}
+                    className={inputCls + " resize-none"}
+                    rows={2}
+                    placeholder="Key benefits"
+                  />
+                </FIELD>
+                <div className="col-span-2">
+                  <FIELD label="Target Crops">
+                    <input
+                      value={form.targetCrops}
+                      onChange={(e) => setF("targetCrops", e.target.value)}
+                      className={inputCls}
+                      placeholder="e.g. Wheat, Rice (comma separated)"
                     />
                   </FIELD>
                 </div>
@@ -640,24 +690,19 @@ function Inventory() {
 
     if (editRow) {
       const product = editRow.products?.[0];
-      const fd = new FormData();
-      fd.append("productName", form.productName);
-      fd.append(
-        "productCategory",
-        form.productCategory || editRow.productCategory || "",
-      );
-      if (form.brand) fd.append("brand", form.brand);
-      if (form.description) fd.append("description", form.description);
-      fd.append("products[0][mrp]", String(Number(form.mrp)));
-      fd.append("products[0][quantity]", String(Number(form.quantity)));
-      fd.append("products[0][unit]", form.unit);
-      fd.append("products[0][purchaseDate]", form.purchaseDate);
-      if (form.parameter) fd.append("products[0][parameter]", form.parameter);
-      if (form.expiryDate)
-        fd.append("products[0][expiryDate]", form.expiryDate);
-      if (product?._id) fd.append("products[0][_id]", product._id);
-      if (imageFile) fd.append("productImages", imageFile);
-      dispatch(updateProduct({ id: editRow._id, data: fd }))
+      const data = {
+        productName: form.productName,
+        productCategory: form.productCategory || editRow.productCategory || "",
+        description: form.description || null,
+        brand: form.brand || null,
+        mrp: Number(form.mrp),
+        quantity: Number(form.quantity),
+        unit: form.unit,
+        purchaseDate: form.purchaseDate,
+        expiryDate: form.expiryDate || null,
+        ...(form.parameter && { parameter: form.parameter }),
+      };
+      dispatch(updateProduct({ id: editRow._id, data }))
         .unwrap()
         .then(() => {
           toast.success("Product updated");
@@ -679,30 +724,43 @@ function Inventory() {
       return;
     }
 
-    const fd = new FormData();
-    fd.append("productName", form.productName);
-    fd.append("productCategory", form.productCategory);
-    fd.append("description", form.description || "");
-    fd.append("brand", form.brand || "");
-    fd.append("products[0][mrp]", String(Number(form.mrp)));
-    fd.append("products[0][quantity]", String(Number(form.quantity)));
-    fd.append("products[0][unit]", form.unit);
-    fd.append("products[0][purchaseDate]", form.purchaseDate);
-    if (form.parameter) fd.append("products[0][parameter]", form.parameter);
-    if (form.expiryDate) fd.append("products[0][expiryDate]", form.expiryDate);
-    if (imageFile) fd.append("productImages", imageFile);
+    const crops = form.targetCrops
+      ? form.targetCrops.split(",").map((c) => c.trim()).filter(Boolean)
+      : ["All"];
 
-    dispatch(addProduct(fd))
+    const payload = {
+      productName: form.productName,
+      productCategory: form.productCategory,
+      ...(form.description && { description: form.description }),
+      ...(form.brand && { brand: form.brand }),
+      productTechnicalDetails: form.productTechnicalDetails,
+      howToUse: form.howToUse,
+      productBenefits: form.productBenefits,
+      targetCrops: crops,
+      products: [{
+        mrp: Number(form.mrp),
+        quantity: Number(form.quantity),
+        unit: form.unit,
+        purchaseDate: form.purchaseDate,
+        ...(form.parameter && { parameter: form.parameter }),
+        ...(form.expiryDate && { expiryDate: form.expiryDate }),
+      }],
+    };
+
+    console.log("Sending payload:", JSON.stringify(payload, null, 2));
+
+    dispatch(addProduct(payload))
       .unwrap()
       .then((newProduct) => {
         toast.success("Product added");
         setShowModal(false);
-        // if image was selected, upload it via update (since addProduct doesn't support images)
-        const newId = newProduct?._id ?? newProduct?.product?._id;
-        if (imageFile && newId) {
-          const imgFd = new FormData();
-          imgFd.append("productImages", imageFile);
-          dispatch(updateProduct({ id: newId, data: imgFd }));
+        if (imageFile) {
+          const newId = newProduct?._id ?? newProduct?.product?._id;
+          if (newId) {
+            const imgFd = new FormData();
+            imgFd.append("productImages", imageFile);
+            dispatch(updateProduct({ id: newId, data: imgFd }));
+          }
         }
         setTimeout(() => dispatch(fetchProducts()), 1500);
       })

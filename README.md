@@ -1,8 +1,8 @@
-# Kisan Parivar – Admin Dashboard
+# **Beej se Bazar – Admin Dashboard**
 
 A modern Farm Management Dashboard for **Marjeevi Pragatisheel FPO**, built with React, Redux Toolkit, and Tailwind CSS.
 
-🔗 **Live Demo:** [kisan-parivar.vercel.app](https://kisan-parivar.vercel.app)
+🔗 **Live Demo:**
 
 ---
 
@@ -25,17 +25,17 @@ A modern Farm Management Dashboard for **Marjeevi Pragatisheel FPO**, built with
 
 ## Tech Stack
 
-| Layer      | Technology                          |
-|------------|-------------------------------------|
-| Frontend   | React 18, Vite, Tailwind CSS        |
-| State      | Redux Toolkit                       |
-| Routing    | React Router v7                     |
-| Charts     | Recharts                            |
-| Maps       | Leaflet + React Leaflet             |
-| PDF        | jsPDF + jsPDF AutoTable             |
-| HTTP       | Axios                               |
-| PWA        | vite-plugin-pwa                     |
-| Deployment | Vercel                              |
+| Layer      | Technology                   |
+| ---------- | ---------------------------- |
+| Frontend   | React 18, Vite, Tailwind CSS |
+| State      | Redux Toolkit                |
+| Routing    | React Router v7              |
+| Charts     | Recharts                     |
+| Maps       | Leaflet + React Leaflet      |
+| PDF        | jsPDF + jsPDF AutoTable      |
+| HTTP       | Axios                        |
+| PWA        | vite-plugin-pwa              |
+| Deployment | Vercel                       |
 
 ---
 
@@ -57,11 +57,10 @@ npm run build
 ## API
 
 All API calls point to:
-```
-https://marjeevi-fpo.krishigyanai.com/api
+
 ```
 
-Authentication uses a Bearer token stored in `localStorage`.
+```
 
 ---
 
@@ -72,3 +71,14 @@ Deployed on Vercel. To redeploy:
 ```bash
 vercel --prod
 ```
+
+---
+
+### Important Note (You should update this too)
+
+Right now, your **project name is changed**, but your **live URL still shows `kisan-parivar`**.
+
+If you want full branding consistency:
+
+- Change Vercel project name → `beej-se-bazar`
+- Update domain → `beej-se-bazar.vercel.app`

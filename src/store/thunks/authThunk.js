@@ -1,36 +1,58 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../lib/api';
-import theme from '../../config/theme';
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../../lib/api";
+import theme from "../../config/theme";
 
 /**
  * =========================
  * LOGIN (Email OR Phone)
  * =========================
  */
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async ({ phone, password }, { rejectWithValue }) => {
+export const sendOtp = createAsyncThunk(
+  "auth/sendOtp",
+  async ({ mobile }, { rejectWithValue }) => {
     try {
-      if (!phone || !password) {
-        return rejectWithValue('Phone and password are required');
+      if (!mobile) {
+        return rejectWithValue("Mobile is required");
       }
 
-      const res = await api.post('/user/signin', { phone, password, role: theme.defaultRole });
+      const res = await api.post("/otp/send-otp", {
+        mobile,
+        role: theme.defaultRole, // or "FPO"
+      });
 
-      return {
-        token: res.data.token,
-        user: {
-          ...res.data.user,
-          role: res.data.user?.role?.toLowerCase() || 'fpo',
-        },
-        profile: res.data.profile || null,
-      };
+      return res.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || err.message || 'Login failed'
+        err.response?.data?.message || "Failed to send OTP",
       );
     }
-  }
+  },
 );
 
+export const verifyOtp = createAsyncThunk(
+  "auth/verifyOtp",
+  async ({ mobile, otp }, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/otp/verify-otp", {
+        mobile,
+        otp,
+        role: theme.defaultRole,
+      });
 
+      console.log("FULL RESPONSE:", res);
+      console.log("DATA ONLY:", res.data);
+      console.log("TOKEN:", res.data?.token);
+
+      return {
+        token: res.data.token, // ✅ correct
+        user: {
+          ...res.data.data, // ✅ FIXED (was res.data.user ❌)
+          role: res.data.data?.role?.toLowerCase() || "fpo",
+        },
+        profile: null, // no profile in response
+      };
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Invalid OTP");
+    }
+  },
+);

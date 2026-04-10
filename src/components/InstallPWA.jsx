@@ -37,7 +37,7 @@ export default function InstallPWA() {
     <button
       onClick={handleInstall}
       className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition"
-      title="Install Kisan Parivar App"
+      title="Install Beej se Bazar App"
     >
       <Download size={15} />
       Install App

@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Import theme for PWA manifest — single source of truth
-const brand     = process.env.VITE_BRAND      || 'Kisan Parivar';
-const shortName = process.env.VITE_SHORT_NAME || 'KisanParivar';
+const brand     = process.env.VITE_BRAND      || 'Beej se Bazar';
+const shortName = process.env.VITE_SHORT_NAME || 'Beej se Bazar';
 const primary   = process.env.VITE_PRIMARY    || '#16a34a';
 
 export default defineConfig({

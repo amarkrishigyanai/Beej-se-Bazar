@@ -1,12 +1,12 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { loginUser } from '../thunks/authThunk';
-import { getToken, setToken, clearToken } from '../../lib/tokenStorage';
+import { createSlice } from "@reduxjs/toolkit";
+import { sendOtp, verifyOtp } from "../thunks/authThunk";
+import { getToken, setToken, clearToken } from "../../lib/tokenStorage";
 
 // ✅ SAFE JSON PARSER
 const safeParse = (key) => {
   try {
     const value = localStorage.getItem(key);
-    if (!value || value === 'undefined') return null;
+    if (!value || value === "undefined") return null;
     return JSON.parse(value);
   } catch {
     return null;
@@ -14,19 +14,20 @@ const safeParse = (key) => {
 };
 
 const rawToken = getToken();
-const validToken = rawToken && rawToken !== 'undefined' ? rawToken : null;
+const validToken = rawToken && rawToken !== "undefined" ? rawToken : null;
 
 const initialState = {
   token: validToken,
-  user: safeParse('user'),
-  profile: safeParse('profile'),
+  user: safeParse("user"),
+  profile: safeParse("profile"),
   isAuthenticated: !!validToken,
   loading: false,
   error: null,
+  otpSent: false, // ✅ REQUIRED
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
 
   reducers: {
@@ -35,50 +36,77 @@ const authSlice = createSlice({
       state.profile = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.otpSent = false; // ✅ add this
       clearToken();
-      localStorage.removeItem('user');
-      localStorage.removeItem('profile');
+      localStorage.removeItem("user");
+      localStorage.removeItem("profile");
     },
 
     clearAuthState: (state) => {
       state.error = null;
-      state.registerSuccess = false;
     },
   },
 
   extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, (state) => {
+
+      /**
+       * =========================
+       * SEND OTP
+       * =========================
+       */
+      .addCase(sendOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
 
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(sendOtp.fulfilled, (state) => {
+        state.loading = false;
+        state.otpSent = true; // move to OTP screen
+      })
+
+      .addCase(sendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to send OTP";
+      })
+
+      /**
+       * =========================
+       * VERIFY OTP (LOGIN)
+       * =========================
+       */
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(verifyOtp.fulfilled, (state, action) => {
         const { token, user, profile } = action.payload;
 
         if (!token) {
           state.loading = false;
-          state.error = 'Login failed: no token received';
+          state.error = "Login failed: no token received";
           return;
         }
 
+        // ✅ Save to state
         state.loading = false;
         state.token = token;
         state.user = user;
         state.profile = profile;
         state.isAuthenticated = true;
+        state.otpSent = false;
 
+        // ✅ Persist data
         setToken(token);
-        localStorage.setItem('user', JSON.stringify(user ?? null));
-        localStorage.setItem('profile', JSON.stringify(profile ?? null));
+        localStorage.setItem("user", JSON.stringify(user ?? null));
+        localStorage.setItem("profile", JSON.stringify(profile ?? null));
       })
 
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Login failed';
-      })
-
-;
+        state.error = action.payload || "OTP verification failed";
+      });
   },
 });
 

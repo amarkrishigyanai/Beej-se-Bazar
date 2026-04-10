@@ -35,8 +35,10 @@ export const addProduct = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await api.post('/product/addProduct', data);
+      console.log('addProduct success:', res.data);
       return res.data.data ?? res.data;
     } catch (err) {
+      console.log('addProduct error full:', err.response?.data);
       return rejectWithValue(err.response?.data?.message || 'Failed to add product');
     }
   }
